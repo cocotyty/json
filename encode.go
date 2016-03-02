@@ -394,13 +394,13 @@ func newTypeEncoder(t reflect.Type, allowAddr bool,style JsonStyle) encoderFunc 
 	case reflect.Struct:
 		return newStructEncoder(t,style)
 	case reflect.Map:
-		return newMapEncoder(t)
+		return newMapEncoder(t,style)
 	case reflect.Slice:
-		return newSliceEncoder(t)
+		return newSliceEncoder(t,style)
 	case reflect.Array:
-		return newArrayEncoder(t)
+		return newArrayEncoder(t,style)
 	case reflect.Ptr:
-		return newPtrEncoder(t)
+		return newPtrEncoder(t,style)
 	default:
 		return unsupportedTypeEncoder
 	}
@@ -624,11 +624,11 @@ func (me *mapEncoder) encode(e *encodeState, v reflect.Value, _ bool) {
 	e.WriteByte('}')
 }
 
-func newMapEncoder(t reflect.Type) encoderFunc {
+func newMapEncoder(t reflect.Type,style JsonStyle) encoderFunc {
 	if t.Key().Kind() != reflect.String {
 		return unsupportedTypeEncoder
 	}
-	me := &mapEncoder{typeEncoder(t.Elem())}
+	me := &mapEncoder{typeEncoder(t.Elem(),style)}
 	return me.encode
 }
 
@@ -667,12 +667,12 @@ func (se *sliceEncoder) encode(e *encodeState, v reflect.Value, _ bool) {
 	se.arrayEnc(e, v, false)
 }
 
-func newSliceEncoder(t reflect.Type) encoderFunc {
+func newSliceEncoder(t reflect.Type,style JsonStyle) encoderFunc {
 	// Byte slices get special treatment; arrays don't.
 	if t.Elem().Kind() == reflect.Uint8 {
 		return encodeByteSlice
 	}
-	enc := &sliceEncoder{newArrayEncoder(t)}
+	enc := &sliceEncoder{newArrayEncoder(t,style)}
 	return enc.encode
 }
 
@@ -692,8 +692,8 @@ func (ae *arrayEncoder) encode(e *encodeState, v reflect.Value, _ bool) {
 	e.WriteByte(']')
 }
 
-func newArrayEncoder(t reflect.Type) encoderFunc {
-	enc := &arrayEncoder{typeEncoder(t.Elem())}
+func newArrayEncoder(t reflect.Type,style JsonStyle) encoderFunc {
+	enc := &arrayEncoder{typeEncoder(t.Elem(),style)}
 	return enc.encode
 }
 
@@ -1147,7 +1147,7 @@ func under(name string) string {
 	}
 	name = string(nameRune)
 	replaceResult := regexp.MustCompile("([A-Z])").ReplaceAllFunc([]byte(name), func(data []byte) []byte {
-		return strings.ToLower(string(data))
+		return []byte("_"+strings.ToLower(string(data)))
 	})
 
 	return string(replaceResult)
