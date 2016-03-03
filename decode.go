@@ -79,9 +79,9 @@ var (
 
 )
 func Unmarshal(data []byte, v interface{}) error {
-	return StyleUnmarshal(data,v,DefaultStyle)
+	return UnmarshalWithStyle(data,v,DefaultStyle)
 }
-func StyleUnmarshal(data []byte ,v interface{},style JsonStyle)error  {
+func UnmarshalWithStyle(data []byte ,v interface{},style JsonStyle)error  {
 	// Check for well-formedness.
 	// Avoids filling out half a data structure
 	// before discovering a JSON syntax error.
